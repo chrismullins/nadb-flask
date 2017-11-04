@@ -1,0 +1,27 @@
+Hop into psql to look at the database:
+	$ docker exec -ti $(docker ps -aqf "name=users-db") psql -U postgres
+
+	# \c users_dev
+	You are now connected to database "users_dev" as user "postgres".
+
+	# \dt
+	         List of relations
+	 Schema | Name  | Type  |  Owner
+	--------+-------+-------+----------
+	 public | users | table | postgres
+	(1 row)
+
+	# \q
+
+
+Run a command on a container:
+	docker-compose run users-service python manage.py recreate_db
+
+
+Set CLI vars for docker-machine:
+	eval "$(docker-machine env dev)"
+	This will set the following:
+		export DOCKER_TLS_VERIFY="1"
+		export DOCKER_HOST="tcp://192.168.99.100:2376"
+		export DOCKER_CERT_PATH="/Users/chrismullins/.docker/machine/machines/dev"
+		export DOCKER_MACHINE_NAME="dev"
