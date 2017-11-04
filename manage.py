@@ -1,8 +1,10 @@
 from flask_script import Manager
 import unittest
 
-from project import app, db
+from project import create_app, db
+from project.api.models import User
 
+app = create_app()
 manager = Manager(app)
 
 @manager.command
