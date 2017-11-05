@@ -7,7 +7,7 @@ services:
     build: ./nginx/
     restart: always
     ports:
-     - 80:80
+      - 80:80
     depends_on:
       users-service:
         condition: service_started
@@ -28,10 +28,8 @@ services:
   users-service:
     container_name: users-service
     build: ./
-    volumes:
-      - '.:/usr/src/app'
-    ports:
-      - 5001:5000 # expose ports - HOST:CONTAINER
+    expose:
+      - '5000' 
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
       - DATABASE_URL=postgres://postgres:postgres@users-db:5432/users_dev
@@ -41,3 +39,4 @@ services:
         condition: service_healthy
     links:
       - users-db
+    command: gunicorn -b 0.0.0.0:5000 manage:app
