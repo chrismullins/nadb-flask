@@ -22,6 +22,27 @@ Set CLI vars for docker-machine:
 	eval "$(docker-machine env dev)"
 	This will set the following:
 		export DOCKER_TLS_VERIFY="1"
-		export DOCKER_HOST="tcp://192.168.99.100:2376"
-		export DOCKER_CERT_PATH="/Users/chrismullins/.docker/machine/machines/dev"
-		export DOCKER_MACHINE_NAME="dev"
+		
+Build the images:
+	docker-compose build
+Run the containers:
+	docker-compose up -d
+Create the database:
+	docker-compose run users-service python manage.py recreate_db
+Seed the database:
+	docker-compose run users-service python manage.py seed_db
+Run the tests:
+	docker-compose run users-service python manage.py test
+Stop the containers:
+	docker-compose stop
+Bring down the containers:
+	docker-compose down
+Force a build:
+	docker-compose build --no-cache
+Remove images:
+	docker rmi $(docker images -q)
+Access database via psql:
+	docker exec -ti users-db psql -U postgres -W
+	# Then, you can connect and run SQL queries:
+	# \c users_dev
+	# select * from users;
