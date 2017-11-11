@@ -46,3 +46,17 @@ Access database via psql:
 	# Then, you can connect and run SQL queries:
 	# \c users_dev
 	# select * from users;
+
+
+
+From client:
+    npm run build
+    cd build/
+    python3 -m http.server
+
+Build a new static image of client:
+    docker build -t "test" ./ --build-arg NODE_ENV=development --build-arg REACT_APP_USERS_SERVICE_URL=http://DOCKER_MACHINE_IP
+
+Get the docker machine IP:
+    docker-machine ip dev (for dev)
+    docker-machien ip aws (for aws)
