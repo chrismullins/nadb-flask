@@ -60,3 +60,11 @@ Build a new static image of client:
 Get the docker machine IP:
     docker-machine ip dev (for dev)
     docker-machien ip aws (for aws)
+
+
+Run tests locally: within -users,
+	$ source env/bin/activate
+	(env)$ export APP_SETTINGS=project.config.DevelopmentConfig
+	(env)$ export DATABASE_URL=postgres://postgres:postgres@localhost:5432/users_dev
+	(env)$ export DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/users_test
+	(env)$ python manage.py test
