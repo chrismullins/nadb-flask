@@ -68,3 +68,8 @@ Run tests locally: within -users,
 	(env)$ export DATABASE_URL=postgres://postgres:postgres@localhost:5432/users_dev
 	(env)$ export DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/users_test
 	(env)$ python manage.py test
+
+Migrate the database: within -users
+	python manage.py db init
+	python manage.py db migrate
+	python manage.py db upgrade	
