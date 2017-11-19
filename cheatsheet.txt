@@ -73,3 +73,12 @@ Migrate the database: within -users
 	python manage.py db init
 	python manage.py db migrate
 	python manage.py db upgrade	
+
+
+Part 3:
+To get up and running, make sure to do:
+export APP_SETTINGS=project.config.DevelopmentConfig
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/users_dev
+export DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/users_test
+export SECRET_KEY = 'my_precious'
+python manage.py test

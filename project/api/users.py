@@ -5,6 +5,7 @@ from project.api.models import User
 from project import db
 
 users_blueprint = Blueprint('users', __name__, template_folder='./templates')
+auth_blueprint = Blueprint('auth', __name__)
 
 @users_blueprint.route('/ping', methods=['GET'])
 def ping_pong():
@@ -101,7 +102,6 @@ def get_all_users():
 	}
 	return jsonify(response_object), 200
 
-
 # @users_blueprint.route('/', methods=['GET', 'POST'])
 # def index():
 # 	if request.method == 'POST':
@@ -112,4 +112,6 @@ def get_all_users():
 # 	users = User.query.all()
 # 	return render_template('index.html', users=users)
 		
+
+
 
