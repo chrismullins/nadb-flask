@@ -20,7 +20,19 @@ class TestUserService(BaseTestCase):
 
 	def test_add_user(self):
 		"""Ensure a new user can be added to the database."""
+		add_user('test', 'test@test.com', 'test')
+		user = User.query.filter_by(email='test@test.com').first()
+		user.admin = True
+		db.session.commit()
 		with self.client:
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
 			response = self.client.post(
 				'/users',
 				data = json.dumps(dict(
@@ -29,6 +41,11 @@ class TestUserService(BaseTestCase):
 					password='pass'
 					)),
 				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
 				)
 		data = json.loads(response.data.decode())
 		self.assertEqual(response.status_code, 201)
@@ -37,11 +54,28 @@ class TestUserService(BaseTestCase):
 
 	def test_add_user_invalid_json(self):
 		"""Ensure error is thrown in the JSON object is empty."""
+		add_user('test', 'test@test.com', 'test')
+		user = User.query.filter_by(email='test@test.com').first()
+		user.admin = True
+		db.session.commit()
 		with self.client:
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
 			response = self.client.post(
 				'/users',
 				data=json.dumps(dict()),
-				content_type='application/json'
+				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
 			)
 			data = json.loads(response.data.decode())
 			self.assertEqual(response.status_code, 400)
@@ -50,14 +84,31 @@ class TestUserService(BaseTestCase):
 
 	def test_add_user_invalid_json_keys(self):
 		"""Ensure error is thrown in the JSON object does not have a username key."""
+		add_user('test', 'test@test.com', 'test')
+		user = User.query.filter_by(email='test@test.com').first()
+		user.admin = True
+		db.session.commit()
 		with self.client:
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
 			response = self.client.post(
 				'/users',
 				data=json.dumps(dict(
 					email='michael@realpython.com',
 					password='pass'
 					)),
-				content_type='application/json'
+				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
 			)
 			data = json.loads(response.data.decode())
 			self.assertEqual(response.status_code, 400)
@@ -66,14 +117,31 @@ class TestUserService(BaseTestCase):
 
 	def test_add_user_duplicate_email(self):
 		"""Ensure error is thrown in the email already exists."""
+		add_user('test', 'test@test.com', 'test')
+		user = User.query.filter_by(email='test@test.com').first()
+		user.admin = True
+		db.session.commit()
 		with self.client:
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
 			self.client.post(
 				'/users',
 				data=json.dumps(dict(
 					username='michael',
 					email='michael@realpython.com',
 					password='pass')),
-				content_type='application/json'
+				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
 			)
 			response = self.client.post(
 				'/users',
@@ -82,6 +150,11 @@ class TestUserService(BaseTestCase):
 					email='michael@realpython.com',
 					password='pass')),
 				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
 			)
 			data = json.loads(response.data.decode())
 			self.assertEqual(response.status_code, 400)
@@ -143,18 +216,66 @@ class TestUserService(BaseTestCase):
 
 	def test_add_user_invalid_json_keys_no_password(self):
 		"""Ensure error is thrown if the JSON object does not have a password key."""
+		add_user('test', 'test@test.com', 'test')
+		user = User.query.filter_by(email='test@test.com').first()
+		user.admin = True
+		db.session.commit()
 		with self.client:
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
 			response = self.client.post(
 				'/users',
 				data = json.dumps(dict(
 					username='michael',
 					email='michael@realpython.com')),
-				content_type='application/json'
-				) 
+				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
+			) 
 			data = json.loads(response.data.decode())
 			self.assertEqual(response.status_code, 400)
 			self.assertIn('Invalid payload.', data['message'])
 			self.assertIn('fail', data['status'])
+
+	def test_add_user_not_admin(self):
+		add_user('test', 'test@test.com', 'test')
+		with self.client:
+			# user login
+			resp_login = self.client.post(
+				'/auth/login',
+				data=json.dumps(dict(
+					email='test@test.com',
+					password='test'
+				)),
+				content_type='application/json'
+			)
+			response = self.client.post(
+				'/users',
+				data=json.dumps(dict(
+					username='michael',
+					email='michael@realpython.com',
+					password='test'
+				)),
+				content_type='application/json',
+				headers=dict(
+					Authorization='Bearer ' + json.loads(
+						resp_login.data.decode()
+					)['auth_token']
+				)
+			)
+			data = json.loads(response.data.decode())
+			self.assertTrue(data['status'] == 'error')
+			self.assertTrue(data['message'] == 'You do not have permission to do that.')
+			self.assertEqual(response.status_code, 401)
 
 	### REMOVING MAIN ROUTE, so remove these three tests ###
 	# def test_main_no_users(self):

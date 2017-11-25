@@ -21,6 +21,7 @@ class TestUserModel(BaseTestCase):
 		self.assertTrue(user.password)
 		self.assertTrue(user.active)
 		self.assertTrue(user.created_at)
+		self.assertFalse(user.admin)
 
 	def test_add_user_duplicate_username(self):
 		"""Ensure adding duplicate usernames raises IntegrityError."""
