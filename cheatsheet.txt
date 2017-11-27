@@ -82,3 +82,15 @@ export DATABASE_URL=postgres://postgres:postgres@localhost:5432/users_dev
 export DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/users_test
 export SECRET_KEY = 'my_precious'
 python manage.py test
+
+
+Set secret key (from main):
+  - Python
+    > import binascii
+    > import os
+    > binascii.hexlify(os.urandom(24))
+  - Bash
+    $ export SECRET_KEY=what_you_just_generated
+
+
+    
