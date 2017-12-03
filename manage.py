@@ -55,6 +55,19 @@ def seed_db():
 	db.session.commit()
 
 @manager.command
+def seed_db_admin():
+	"""Seeds the db with an admin user"""
+	db.session.add(User(
+		username='admin',
+		email='admin@admin.com',
+		password='adminadminadmin'
+	))
+	db.session.commit()
+	user = User.query.filter_by(email='admin@admin.com').first()
+	user.admin = True
+	db.session.commit()
+
+@manager.command
 def cov():
 	"""Runs the unit tests with coverage."""
 	tests = unittest.TestLoader().discover('project/tests')
