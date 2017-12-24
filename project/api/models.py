@@ -32,11 +32,16 @@ class User(db.Model):
           'iat': datetime.datetime.utcnow(),
           'sub': user_id
           }
-          return jwt.encode(
+          secret_key = current_app.config.get('SECRET_KEY')
+          print("secret key: {}".format(secret_key))
+          if not secret_key:
+            print("HEY ASSHOEL REMEMBER TO SET THE SECRET_KEY")
+          result = jwt.encode(
                   payload,
                   current_app.config.get('SECRET_KEY'),
                   algorithm='HS256'
               )
+          return result
       except Exception as e:
           return e
     # def encode_auth_token(self, user_id):

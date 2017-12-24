@@ -7,15 +7,14 @@ from flask_migrate import MigrateCommand
 from project import create_app, db
 from project.api.models import User
 
-
 COV = coverage.coverage(
-	branch=True,
-	include='project/*',
-	omit=[
-		'project/tests/*',
-		'project/server/config.py',
-		'project/server/*/__init__.py'
-	]
+    branch=True,
+    include='project/*',
+    omit=[
+        'project/tests/*',
+        'project/server/config.py',
+        'project/server/*/__init__.py'
+    ]
 )
 COV.start()
 
@@ -23,64 +22,70 @@ app = create_app()
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
+
 @manager.command
 def recreate_db():
-	"""Recreates a database."""
-	db.drop_all()
-	db.create_all()
-	db.session.commit()
+    """Recreates a database."""
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
 
 @manager.command
 def test():
-	"""Runs the tests without code coverage."""
-	tests = unittest.TestLoader().discover('project/tests', pattern='test*.py')
-	result = unittest.TextTestRunner(verbosity=2).run(tests)
-	if result.wasSuccessful():
-		return 0
-	return 1
+    """Runs the tests without code coverage."""
+    tests = unittest.TestLoader().discover('project/tests', pattern='test*.py')
+    result = unittest.TextTestRunner(verbosity=2).run(tests)
+    if result.wasSuccessful():
+        return 0
+    return 1
+
 
 @manager.command
 def seed_db():
-	"""Seeds the database."""
-	db.session.add(User(
-		username='chris',
-		email='chris@example.com',
-		password='pass'
-	))
-	db.session.add(User(
-		username='staci',
-		email='staci@example.com',
-		password='pass'
-	))
-	db.session.commit()
+    """Seeds the database."""
+    db.session.add(User(
+        username='chris',
+        email='chris@example.com',
+        password='pass'
+    ))
+    db.session.add(User(
+        username='staci',
+        email='staci@example.com',
+        password='pass'
+    ))
+    db.session.commit()
+
 
 @manager.command
 def seed_db_admin():
-	"""Seeds the db with an admin user"""
-	db.session.add(User(
-		username='admin',
-		email='admin@admin.com',
-		password='adminadminadmin'
-	))
-	db.session.commit()
-	user = User.query.filter_by(email='admin@admin.com').first()
-	user.admin = True
-	db.session.commit()
+    """Seeds the db with an admin user"""
+    db.session.add(User(
+        username='admin',
+        email='admin@admin.com',
+        password='adminadminadmin'
+    ))
+    db.session.commit()
+    user = User.query.filter_by(email='admin@admin.com').first()
+    user.admin = True
+    db.session.commit()
+
 
 @manager.command
 def cov():
-	"""Runs the unit tests with coverage."""
-	tests = unittest.TestLoader().discover('project/tests')
-	result = unittest.TextTestRunner(verbosity=2).run(tests)
-	if result.wasSuccessful():
-		COV.stop()
-		COV.save()
-		print('Coverage Summary:')
-		COV.report()
-		COV.html_report()
-		COV.erase()
-		return 0
-	return 1
+    """Runs the unit tests with coverage."""
+    tests = unittest.TestLoader().discover('project/tests')
+    result = unittest.TextTestRunner(verbosity=2).run(tests)
+    if result.wasSuccessful():
+        COV.stop()
+        COV.save()
+        print('Coverage Summary:')
+        COV.report()
+        COV.html_report()
+        COV.erase()
+        return 0
+    return 1
+
 
 if __name__ == '__main__':
-	manager.run()
+    manager.run()

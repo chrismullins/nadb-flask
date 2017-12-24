@@ -1,3 +1,10 @@
+To get started (in flask-microservices-users):
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/nailart_db
+export SECRET_KEY="my_precious"
+export APP_SETTINGS=project.config.DevelopmentConfig
+
+
+
 Hop into psql to look at the database:
 	$ docker exec -ti $(docker ps -aqf "name=users-db") psql -U postgres
 
