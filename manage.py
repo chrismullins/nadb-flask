@@ -16,7 +16,7 @@ COV = coverage.coverage(
         'project/server/*/__init__.py'
     ]
 )
-COV.start()
+#COV.start()
 
 app = create_app()
 manager = Manager(app)

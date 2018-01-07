@@ -94,8 +94,16 @@ def get_single_user(user_id):
 
 
 @users_blueprint.route('/users', methods=['GET'])
-def get_all_users():
+@authenticate
+def get_all_users(resp):
     """Get all users."""
+    acting_user_id = resp
+    if not is_admin(acting_user_id):
+        response_object = {
+            'status': 'error',
+            'message': 'You do not have permissions to delete users.'
+        }
+        return jsonify(response_object), 401
     users = User.query.order_by(User.created_at.desc()).all()
     users_list = []
     for user in users:
@@ -113,6 +121,86 @@ def get_all_users():
         }
     }
     return jsonify(response_object), 200
+
+
+#@users_blueprint.route('/users/<user_id>', methods=['DELETE'])
+#@authenticate
+@users_blueprint.route('/users/<user_id>', methods=['DELETE'])
+@authenticate
+def delete_user(resp, user_id):
+    response_object = {
+        'status': 'fail',
+        'message': 'Generic error message. Contact your sysadmin.'
+    }
+    acting_user_id = resp;
+    if not is_admin(acting_user_id):
+        response_object = {
+            'status': 'error',
+            'message': 'You do not have permissions to delete users.'
+        }
+        return jsonify(response_object), 401
+    # else:
+    #     print("He has permission.")
+    try:
+        user = User.query.filter_by(id=int(user_id)).first()
+        if not user:
+            response_object = {
+                'status': 'fail',
+                'message': 'User does not exist'
+            }
+            return jsonify(response_object), 404
+        else:
+            db.session.delete(user)
+            db.session.commit()
+            response_object = {
+                'status': 'success',
+                'message': 'User {} has been deleted.'.format(user.username)
+            }
+            return jsonify(response_object), 200
+    except exc.IntegrityError as e:
+        db.session.rollback()
+        response_object = {
+            'status': 'fail',
+            'message': 'Invalid payload.'
+        }
+        return jsonify(response_object), 400
+    except (exc.IntegrityError, ValueError) as e:
+        db.session.rollback()
+        response_object = {
+            'status': 'fail',
+            'message': 'Invalid payload .'
+        }
+        return jsonify(response_object), 400
+    except ValueError:
+        return jsonify(response_object), 404
+
+    response_object = {
+        'status': 'fine',
+        'message': 'Deleting user {}'.format(user.username)
+    }
+    return jsonify(response_object), 200
+    # if not is_admin(resp):
+    #     response_object = {
+    #         'status': 'error',
+    #         'message': 'You do not have permission to do that.'
+    #     }
+    #     return jsonify(response_object), 401
+    # response_object = {
+    #     'status': 'fail',
+    #     'message': 'User does not exist'
+    # }
+    # try:
+    #     user = User.query.filter_by(id=int(user_id)).first()
+    #     if not user:
+    #         return jsonify(response_object), 404
+    #     else:
+    #         response_object = {
+    #             'status': 'success',
+    #             'message': 'User {} has been deleted.'.format(user.username)
+    #         }
+    #         return jsonify(response_object), 200
+    # except ValueError:
+    #     return jsonify(response_object), 404
 
 # @users_blueprint.route('/', methods=['GET', 'POST'])
 # def index():

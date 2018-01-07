@@ -14,25 +14,25 @@ bcrypt = Bcrypt()
 
 def create_app():
 
-	# instantiate the app
-	app = Flask(__name__)
+    # instantiate the app
+    app = Flask(__name__)
 
-	# enable CORS
-	CORS(app)
+    # enable CORS
+    CORS(app)
 
-	# set config
-	app_settings = os.getenv('APP_SETTINGS')
-	app.config.from_object(app_settings)
+    # set config
+    app_settings = os.getenv('APP_SETTINGS')
+    app.config.from_object(app_settings)
 
-	# set up extensions
-	db.init_app(app)
-	bcrypt.init_app(app)
-	migrate.init_app(app, db)
+    # set up extensions
+    db.init_app(app)
+    bcrypt.init_app(app)
+    migrate.init_app(app, db)
 
-	# register blueprints
-	from project.api.users import users_blueprint
-	from project.api.auth import auth_blueprint
-	app.register_blueprint(auth_blueprint)
-	app.register_blueprint(users_blueprint)
+    # register blueprints
+    from project.api.users import users_blueprint
+    from project.api.auth import auth_blueprint
+    app.register_blueprint(auth_blueprint)
+    app.register_blueprint(users_blueprint)
 
-	return app
+    return app
