@@ -132,7 +132,7 @@ def delete_user(resp, user_id):
         'status': 'fail',
         'message': 'Generic error message. Contact your sysadmin.'
     }
-    acting_user_id = resp;
+    acting_user_id = resp
     if not is_admin(acting_user_id):
         response_object = {
             'status': 'error',
@@ -179,38 +179,73 @@ def delete_user(resp, user_id):
         'message': 'Deleting user {}'.format(user.username)
     }
     return jsonify(response_object), 200
-    # if not is_admin(resp):
-    #     response_object = {
-    #         'status': 'error',
-    #         'message': 'You do not have permission to do that.'
-    #     }
-    #     return jsonify(response_object), 401
-    # response_object = {
-    #     'status': 'fail',
-    #     'message': 'User does not exist'
-    # }
-    # try:
-    #     user = User.query.filter_by(id=int(user_id)).first()
-    #     if not user:
-    #         return jsonify(response_object), 404
-    #     else:
-    #         response_object = {
-    #             'status': 'success',
-    #             'message': 'User {} has been deleted.'.format(user.username)
-    #         }
-    #         return jsonify(response_object), 200
-    # except ValueError:
-    #     return jsonify(response_object), 404
 
-# @users_blueprint.route('/', methods=['GET', 'POST'])
-# def index():
-# 	if request.method == 'POST':
-# 		username = request.form['username']
-# 		email = request.form['email']
-# 		db.session.add(User(username=username, email=email))
-# 		db.session.commit()
-# 	users = User.query.all()
-# 	return render_template('index.html', users=users)
+@users_blueprint.route('/users/<user_id>', methods=['PUT'])
+@authenticate
+def modify_user(resp, user_id):
+    response_object = {
+        'status': 'fail',
+        'message': 'Generic error message. Contact your sysadmin.'
+    }
+    acting_user_id = resp
+    # admin can modify anyone, and every user can modify him/herself
+    if not (is_admin(acting_user_id) or acting_user_id == resp):
+        response_object = {
+            'status': 'error',
+            'message': 'You do not have permission to modify this user.'
+        }
+        return jsonify(response_object), 401
+    # if either field is null, we will get an IntegrityError and roll back
+    # on db.session.commit()
+    post_data = request.get_json()
+    new_username = post_data.get('username')
+    new_email = post_data.get('email')
+    if not post_data:
+        response_object = {
+            'status': 'fail',
+            'message': 'Invalid payload.'
+        }
+        return jsonify(response_object), 400
+    try:
+        user = User.query.filter_by(id=int(user_id)).first()
+        if not user:
+            response_object = {
+                'status': 'fail',
+                'message': 'User does not exist'
+            }
+            return jsonify(response_object), 404
+        else:
+            response_object = {
+                'status': 'success',
+                'message': 'Fields modified:'
+            }
+            if user.username == new_username and user.email == new_email:
+                response_object['message'] = 'No fields modified.'
+                # This doesn't matter, 204 returns no headers
+                return jsonify(response_object), 204
+            else:
+                if user.username != new_username:
+                    user.username = new_username
+                    response_object['message'] += ' username'
+                if user.email != new_email:
+                    user.email = new_email
+                    response_object['message'] += ' email'
+                db.session.commit()
+                return jsonify(response_object), 200
+    except exc.IntegrityError as e:
+        db.session.rollback()
+        response_object = {
+            'status': 'fail',
+            'message': 'Invalid payload.'
+        }
+        return jsonify(response_object), 400
+    except (exc.IntegrityError, ValueError) as e:
+        db.session.rollback()
+        response_object = {
+            'status': 'fail',
+            'message': 'Invalid payload.'
+        }
+        return jsonify(response_object), 400
 
 
 

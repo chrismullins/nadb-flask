@@ -34,3 +34,20 @@ headers = {
 # !!NOTE: data must be type 'str' hence json.dumps while headers can be dict
 r = requests.post(url + add_user_endpoint, data=json.dumps(data), headers=headers)
 print(r.text)
+
+
+####
+# Test modifying a user!
+####
+modify_user_endpoint = '/users' # same as above
+data = {
+    'username': 'chris',
+    'email': 'chris@newdomain.com' # this is the change we're making
+}
+headers = {
+    'Authorization': 'Bearer {}'.format(token)
+    'content_type': 'application/json'
+}
+# user's id = 1
+r = requests.put(url + modify_user_endpoint + '/1', data=json.dumps(data), headers=headers)
+print(r.text)

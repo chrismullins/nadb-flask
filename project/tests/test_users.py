@@ -194,24 +194,47 @@ class TestUserService(BaseTestCase):
 
     def test_all_users(self):
         """Ensure get all users behaves correctly."""
+        # Create admin user
+        add_user('admin', 'admin@admin.com', 'admin')
+        user = User.query.filter_by(email='admin@admin.com').first()
+        user.admin = True
+        db.session.commit()
         created = datetime.datetime.utcnow() + datetime.timedelta(-30)
         add_user(username='michael',
                  email='michael@realpython.com',
                  password='pass',
                  created_at=created)
-        add_user(username='fletcher', email='fletcher@realpython.com', password='pass')
+        add_user(username='fletcher',
+                 email='fletcher@realpython.com',
+                 password='pass')
         with self.client:
-            response = self.client.get('/users')
+            resp_login = self.client.post(
+                '/auth/login',
+                data=json.dumps(dict(
+                    email='admin@admin.com',
+                    password='admin'
+                )),
+                content_type='application/json'
+            )
+            response = self.client.get(
+                '/users',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                       resp_login.data.decode()
+                   )['auth_token']
+               )
+            )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(data['data']['users']), 2)
+            # michael, fletcher, and the admin
+            self.assertEqual(len(data['data']['users']), 3)
             self.assertTrue('created_at' in data['data']['users'][0])
             self.assertTrue('created_at' in data['data']['users'][1])
             # michael was created in the past, so he should be second in the list
-            self.assertIn('michael', data['data']['users'][1]['username'])
-            self.assertIn('fletcher', data['data']['users'][0]['username'])
-            self.assertIn('michael@realpython.com', data['data']['users'][1]['email'])
-            self.assertIn('fletcher@realpython.com', data['data']['users'][0]['email'])
+            self.assertIn('michael', data['data']['users'][2]['username'])
+            self.assertIn('fletcher', data['data']['users'][1]['username'])
+            self.assertIn('michael@realpython.com', data['data']['users'][2]['email'])
+            self.assertIn('fletcher@realpython.com', data['data']['users'][1]['email'])
             self.assertIn('success', data['status'])
 
     def test_add_user_invalid_json_keys_no_password(self):
@@ -390,3 +413,41 @@ class TestUserService(BaseTestCase):
             self.assertEqual(data_failed['status'], 'fail')
             self.assertTrue(data_failed['message'] == 'User does not exist')
             self.assertEqual(response_failed.status_code, 404)
+
+    def test_modify_user_as_admin(self):
+        """Ensure admin user can modify users"""
+        # Create admin user
+        add_user('admin', 'admin@admin.com', 'admin')
+        user = User.query.filter_by(email='admin@admin.com').first()
+        user.admin = True
+        db.session.commit()
+        # Create nonadmin user
+        add_user('changeme', 'changeme@changeme.com', 'changeme')
+        # login with admin
+        with self.client:
+            # user login
+            resp_login = self.client.post(
+                '/auth/login',
+                data=json.dumps(dict(
+                    email='admin@admin.com',
+                    password='admin'
+                )),
+                content_type='application/json'
+            )
+            changeme_user = User.query.filter_by(email='changeme@changeme.com').first()
+            response = self.client.put(
+                '/users/{}'.format(changeme_user.id),
+                content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(resp_login.data.decode())['auth_token']
+                ),
+                data=json.dumps(dict(
+                    username='xchangeme',
+                    email='changeme@changeme.com',
+                    password='test'
+                ))
+            )
+        response_data = json.loads(response.data.decode())
+        self.assertEqual(response_data['status'], 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['message'], 'Fields modified: username')
